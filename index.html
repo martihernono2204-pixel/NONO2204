@@ -136,14 +136,14 @@ function toast(msg){
 function needPerfume(){
   page='perfumes';render();
   toast('Primero crea tu perfume 🧴 y luego podrás registrar compras y ventas');
-  forms.perfumes();
+  formularios.perfumes();
 }
 
 function saveRec(col,old,rec){
   if(old)Object.assign(old,rec);else db[col].push({id:uid(),...rec});
   save();render();
 }
-function edit(col,id){forms[col](byId(db[col],id))}
+function edit(col,id){formularios[col](byId(db[col],id))}
 function del(col,id){
   if(!confirm('¿Eliminar este registro?'))return;
   const o=byId(db[col],id);
@@ -156,28 +156,28 @@ function revertVenta(o){const p=byId(db.productos,o.productoId);if(p)p.stock+=o.
 function revertCompra(o){const p=byId(db.productos,o.productoId);if(p)p.stock-=o.cantidad}
 
 /* ===== Formularios ===== */
-const forms={};
+const formularios={};
 const OPT_PROV=opt(()=>db.proveedores,p=>p.nombre,'— Sin proveedor —');
 const OPT_CLI=opt(()=>db.clientes,p=>p.nombre,'— Sin cliente —');
 const OPT_ASE=opt(()=>db.asesoras,p=>p.nombre+' ('+p.comision+'%)','Yo misma (sin comisión)');
 const OPT_PRO=opt(()=>db.productos,p=>`${p.nombre}${p.marca?' – '+p.marca:''} (stock ${p.stock})`,'— Elige un perfume —');
 
-forms.clientes=old=>openForm(old?'Editar cliente':'Nuevo cliente',[{k:'nombre',l:'Nombre',r:1},{k:'telefono',l:'Teléfono / WhatsApp',t:'tel'},{k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('clientes',old,v));
-forms.proveedores=old=>openForm(old?'Editar proveedor':'Nuevo proveedor',[{k:'nombre',l:'Nombre',r:1},{k:'telefono',l:'Teléfono / WhatsApp',t:'tel'},{k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('proveedores',old,v));
-forms.asesoras=old=>openForm(old?'Editar asesora':'Nueva asesora',[
+formularios.clientes=old=>openForm(old?'Editar cliente':'Nuevo cliente',[{k:'nombre',l:'Nombre',r:1},{k:'telefono',l:'Teléfono / WhatsApp',t:'tel'},{k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('clientes',old,v));
+formularios.proveedores=old=>openForm(old?'Editar proveedor':'Nuevo proveedor',[{k:'nombre',l:'Nombre',r:1},{k:'telefono',l:'Teléfono / WhatsApp',t:'tel'},{k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('proveedores',old,v));
+formularios.asesoras=old=>openForm(old?'Editar asesora':'Nueva asesora',[
   {k:'nombre',l:'Nombre',r:1},{k:'telefono',l:'Teléfono / WhatsApp',t:'tel'},
   {k:'comision',l:'Comisión (%)',t:'number',d:10,r:1},
   {k:'base',l:'La comisión se calcula sobre…',t:'select',d:'ganancia',o:()=>[['ganancia','la ganancia de la venta'],['venta','el valor total de la venta']]},
   {k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('asesoras',old,{...v,comision:num(v.comision)}));
 
-forms.perfumes=old=>openForm(old?'Editar perfume':'Nuevo perfume',[
+formularios.perfumes=old=>openForm(old?'Editar perfume':'Nuevo perfume',[
   {k:'nombre',l:'Nombre del perfume',r:1},{k:'marca',l:'Marca'},
   {k:'proveedorId',l:'Proveedor',t:'select',o:OPT_PROV},
   {k:'costo',l:'Costo por unidad',t:'number',r:1},{k:'precio',l:'Precio de venta',t:'number',r:1},
   {k:'stock',l:'Unidades en inventario',t:'number',d:0}],old,
   v=>saveRec('productos',old,{...v,costo:num(v.costo),precio:num(v.precio),stock:num(v.stock)}));
 
-forms.ventas=old=>{
+formularios.ventas=old=>{
   if(!db.productos.length){needPerfume();return}
   let manual=!!old;
   openForm(old?'Editar venta':'Nueva venta',[
@@ -215,7 +215,7 @@ forms.ventas=old=>{
     });
 };
 
-forms.compras=old=>{
+formularios.compras=old=>{
   if(!db.productos.length){needPerfume();return}
   openForm(old?'Editar compra':'Nueva compra (inversión)',[
     {k:'fecha',l:'Fecha',t:'date',r:1},
@@ -241,7 +241,7 @@ forms.compras=old=>{
     });
 };
 
-forms.planes=old=>openForm(old?'Editar plan':'Nueva inversión planeada',[
+formularios.planes=old=>openForm(old?'Editar plan':'Nueva inversión planeada',[
   {k:'descripcion',l:'¿Qué quiero comprar?',r:1},
   {k:'proveedorId',l:'Proveedor',t:'select',o:OPT_PROV},
   {k:'monto',l:'Monto estimado',t:'number',r:1},
@@ -249,7 +249,7 @@ forms.planes=old=>openForm(old?'Editar plan':'Nueva inversión planeada',[
   {k:'estado',l:'Estado',t:'select',d:'pendiente',o:()=>[['pendiente','Pendiente'],['hecha','Ya hecha']]},
   {k:'notas',l:'Notas',t:'textarea'}],old,v=>saveRec('planes',old,{...v,monto:num(v.monto)}));
 
-forms.gastos=old=>openForm(old?'Editar gasto':'Nuevo gasto',[
+formularios.gastos=old=>openForm(old?'Editar gasto':'Nuevo gasto',[
   {k:'fecha',l:'Fecha',t:'date',r:1},{k:'concepto',l:'Concepto (envíos, empaques, publicidad…)',r:1},
   {k:'monto',l:'Monto',t:'number',r:1}],old||{fecha:today()},v=>saveRec('gastos',old,{...v,monto:num(v.monto)}));
 
@@ -310,7 +310,7 @@ function pg_inicio(){
 /* ===== Ventas ===== */
 function pg_ventas(){
   const L=[...db.ventas].sort((a,b)=>(b.fecha+b.id).localeCompare(a.fecha+a.id));
-  return `<div class="top"><h2>Ventas</h2><button class="btn" onclick="forms.ventas()">+ Nueva venta</button></div>`+
+  return `<div class="top"><h2>Ventas</h2><button class="btn" onclick="formularios.ventas()">+ Nueva venta</button></div>`+
   (L.length?L.map(v=>{
     const p=byId(db.productos,v.productoId),a=byId(db.asesoras,v.asesoraId),c=byId(db.clientes,v.clienteId);
     const tot=v.cantidad*v.precio,gan=tot-v.cantidad*v.costo-(v.comision||0);
@@ -327,7 +327,7 @@ function pg_ventas(){
 /* ===== Perfumes ===== */
 function pg_perfumes(){
   const L=[...db.productos].sort((a,b)=>a.nombre.localeCompare(b.nombre));
-  return `<div class="top"><h2>Perfumes</h2><button class="btn" onclick="forms.perfumes()">+ Nuevo perfume</button></div>`+
+  return `<div class="top"><h2>Perfumes</h2><button class="btn" onclick="formularios.perfumes()">+ Nuevo perfume</button></div>`+
   (L.length?L.map(p=>{
     const pr=byId(db.proveedores,p.proveedorId),mg=p.precio>0?Math.round((p.precio-p.costo)/p.precio*100):0;
     return item(esc(p.nombre)+(p.marca?` <span class="muted">· ${esc(p.marca)}</span>`:''),
@@ -335,12 +335,12 @@ function pg_perfumes(){
       `<span class="${p.stock<=2?'neg':''}">${p.stock} u.</span>`,acts('productos',p.id));
   }).join(''):empty('Agrega tus perfumes con su costo y precio de venta.'));
 }
-forms.productos=forms.perfumes;
+formularios.productos=formularios.perfumes;
 
 /* ===== Compras ===== */
 function pg_compras(){
   const L=[...db.compras].sort((a,b)=>(b.fecha+b.id).localeCompare(a.fecha+a.id));
-  return `<div class="top"><h2>Compras</h2><button class="btn" onclick="forms.compras()">+ Nueva compra</button></div>
+  return `<div class="top"><h2>Compras</h2><button class="btn" onclick="formularios.compras()">+ Nueva compra</button></div>
   <div class="kpis" style="margin-bottom:12px">${kpi('Total invertido (histórico)',money(sum(db.compras,c=>c.cantidad*c.costoU)))}</div>`+
   (L.length?L.map(c=>{
     const p=byId(db.productos,c.productoId),pr=byId(db.proveedores,c.proveedorId);
@@ -360,7 +360,7 @@ function payAsesora(id){
 }
 function pg_personas(){
   const tabs=[['clientes','Clientes'],['asesoras','Asesoras'],['proveedores','Proveedores']];
-  let h=`<div class="top"><h2>Personas</h2><button class="btn" onclick="forms.${sub}()">+ Nuevo</button></div>
+  let h=`<div class="top"><h2>Personas</h2><button class="btn" onclick="formularios.${sub}()">+ Nuevo</button></div>
   <div class="tabs">${tabs.map(([k,l])=>`<button class="${k===sub?'on':''}" onclick="sub='${k}';render()">${l}</button>`).join('')}</div>`;
   const L=[...db[sub]].sort((a,b)=>a.nombre.localeCompare(b.nombre));
   if(!L.length)return h+empty({clientes:'Aún no tienes clientes.',asesoras:'Aún no tienes asesoras. Si vendes tú misma, no necesitas crear ninguna.',proveedores:'Agrega a quién le compras tus perfumes.'}[sub]);
@@ -391,7 +391,7 @@ function pg_personas(){
 function pg_planes(){
   const L=[...db.planes].sort((a,b)=>(a.estado==='hecha')-(b.estado==='hecha')||(a.fecha||'9').localeCompare(b.fecha||'9'));
   const pend=sum(db.planes.filter(p=>p.estado!=='hecha'),p=>p.monto);
-  return `<div class="top"><h2>Próximas inversiones</h2><button class="btn" onclick="forms.planes()">+ Nueva</button></div>
+  return `<div class="top"><h2>Próximas inversiones</h2><button class="btn" onclick="formularios.planes()">+ Nueva</button></div>
   <div class="kpis" style="margin-bottom:12px">${kpi('Total por invertir',money(pend))}</div>`+
   (L.length?L.map(p=>{
     const pr=byId(db.proveedores,p.proveedorId),h=p.estado==='hecha';
@@ -431,7 +431,7 @@ function borrarTodo(){
 }
 function pg_mas(){
   const G=[...db.gastos].sort((a,b)=>(b.fecha+b.id).localeCompare(a.fecha+a.id));
-  return `<div class="top"><h2>Gastos extra</h2><button class="btn" onclick="forms.gastos()">+ Nuevo gasto</button></div>`+
+  return `<div class="top"><h2>Gastos extra</h2><button class="btn" onclick="formularios.gastos()">+ Nuevo gasto</button></div>`+
   (G.length?G.map(g=>item(esc(g.concepto),g.fecha,money(g.monto),acts('gastos',g.id))).join(''):empty('Registra envíos, empaques, publicidad… se restan de tu ganancia.'))+
   `<h3>Respaldo de datos</h3>
   <div class="note">Tus datos se guardan <b>en este dispositivo</b> (celular o PC). Para pasarlos de uno a otro, o para no perderlos, descarga un respaldo y cárgalo en el otro. Hazlo seguido.</div>
